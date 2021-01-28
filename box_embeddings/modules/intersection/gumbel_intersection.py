@@ -2,7 +2,7 @@ from typing import List, Tuple, Union, Dict, Any, Optional
 import torch
 from torch import Tensor
 from .intersection import Intersection
-from box_embeddings.parameterizations import TBoxTensor
+from box_embeddings.parameterizations import TBoxTensor, BoxTensor
 from box_embeddings.common.utils import logsumexp2
 from box_embeddings import box_debug_level
 
@@ -51,7 +51,7 @@ def gumbel_intersection(
     right: TBoxTensor,
     gumbel_beta: float = 1.0,
     approximation_mode: Optional[str] = None,
-) -> TBoxTensor:
+) -> BoxTensor:
     """Hard Intersection operation as a function.
 
     note:
@@ -100,7 +100,7 @@ def gumbel_intersection(
                 torch.min(t1.z, t2.z) > Z
             ), "min(a,b) > -beta*log(exp(-a/beta) + exp(-b/beta)) not holding"
 
-    return left.from_zZ(z, Z)
+    return BoxTensor.from_zZ(z, Z)
 
 
 @Intersection.register("gumbel")
@@ -130,7 +130,7 @@ class GumbelIntersection(Intersection):
         self.beta = beta
         self.approximation_mode = approximation_mode
 
-    def _forward(self, left: TBoxTensor, right: TBoxTensor) -> TBoxTensor:
+    def _forward(self, left: TBoxTensor, right: TBoxTensor) -> BoxTensor:
         """Gives intersection of self and other.
 
         Args:

@@ -2,10 +2,10 @@ from typing import List, Tuple, Union, Dict, Any, Optional
 import torch
 from torch import Tensor
 from .intersection import Intersection
-from box_embeddings.parameterizations import TBoxTensor
+from box_embeddings.parameterizations import TBoxTensor, BoxTensor
 
 
-def hard_intersection(left: TBoxTensor, right: TBoxTensor) -> TBoxTensor:
+def hard_intersection(left: TBoxTensor, right: TBoxTensor) -> BoxTensor:
     """Hard Intersection operation as a function.
 
     note:
@@ -27,14 +27,14 @@ def hard_intersection(left: TBoxTensor, right: TBoxTensor) -> TBoxTensor:
     z = torch.max(t1.z, t2.z)
     Z = torch.min(t1.Z, t2.Z)
 
-    return left.from_zZ(z, Z)
+    return BoxTensor.from_zZ(z, Z)
 
 
 @Intersection.register("hard")
 class HardIntersection(Intersection):
     """Hard intersection operation as a Layer/Module"""
 
-    def _forward(self, left: TBoxTensor, right: TBoxTensor) -> TBoxTensor:
+    def _forward(self, left: TBoxTensor, right: TBoxTensor) -> BoxTensor:
         """Gives intersection of self and other.
 
         Args:
