@@ -141,12 +141,6 @@ class CenterFixedDeltaBoxTensor(BoxTensor):
             A BoxTensor
 
         """
-        with torch.no_grad():  # type: ignore
-            delta_1 = (Z - z)[0]
-            assert torch.allclose(
-                (Z - z), torch.ones_like(z) * delta_1
-            ), "Invalid z,Z for CenterFixedDeltaBoxTensor"
-
         return cls((Z + z) / 2.0, *args, **kwargs)
 
     @property
