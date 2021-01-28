@@ -558,9 +558,6 @@ class BoxFactory(Registrable):
         Returns:
             ()
 
-        Raises:
-            RuntimeError: if
-
         """
 
         def add_box_class(subclass: Type[TBoxTensor]) -> Type[TBoxTensor]:
