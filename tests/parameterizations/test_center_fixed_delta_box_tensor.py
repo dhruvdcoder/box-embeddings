@@ -30,8 +30,6 @@ def test_creation_from_zZ():
     shape = (3, 1, 5)
     z = torch.tensor(np.random.rand(*shape))
     Z = z + torch.tensor(np.random.rand(*shape))
-    with pytest.raises(AssertionError):
-        box1 = CenterFixedDeltaBoxTensor.from_zZ(z, Z)
     box2 = CenterFixedDeltaBoxTensor.from_zZ(z, z + 0.1)
 
 

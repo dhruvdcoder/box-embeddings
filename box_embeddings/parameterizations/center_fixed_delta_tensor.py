@@ -123,9 +123,9 @@ class CenterFixedDeltaBoxTensor(BoxTensor):
         return cls(vector, delta=delta)
 
     @classmethod
-    def from_zZ(
+    def from_zZ( # type: ignore
         cls: Type[TBoxTensor], z: Tensor, Z: Tensor, *args: Any, **kwargs: Any
-    ) -> TBoxTensor:
+    ) -> BoxTensor:
         """Creates a box for the given min-max coordinates (z,Z).
 
         In the this base implementation we do this by
@@ -141,7 +141,8 @@ class CenterFixedDeltaBoxTensor(BoxTensor):
             A BoxTensor
 
         """
-        return cls((Z + z) / 2.0, *args, **kwargs)
+
+        return BoxTensor.from_zZ(z, Z)
 
     @property
     def box_shape(self) -> Tuple:
