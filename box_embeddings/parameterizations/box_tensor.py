@@ -278,13 +278,13 @@ class BoxTensor(object):
 
         """
 
-        return self.from_zZ(z, Z, *self.args, *self.kwargs)
+        return self.from_zZ(z, Z, *self.args, **self.kwargs)
 
     @classmethod
     def from_vector(
         cls, vector: Tensor, *args: Any, **kwargs: Any
     ) -> TBoxTensor:
-        """Creates a box for a vector. In this base implementation the vector is split
+        """Creates a box from a vector. In this base implementation the vector is split
         into two pieces and these are used as z,Z.
 
         Args:
@@ -512,7 +512,9 @@ R = TypeVar("R", bound="BoxTensor")
 
 class BoxFactory(Registrable):
 
-    """A factory class which will be subclassed(one for each box type)."""
+    """A factory class that will hold a register containing different
+    box-types and will be responsible for creating instances of boxes.
+    """
 
     box_registry: Dict[str, Tuple[Type[R], str]] = {}  # type:ignore
 
