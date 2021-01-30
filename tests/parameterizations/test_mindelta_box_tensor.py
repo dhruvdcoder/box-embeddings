@@ -67,6 +67,21 @@ def test_creation_from_vector(beta, threshold):
 
 
 @hypothesis.given(
+    beta=floats(1.0, 50.0),
+    threshold=integers(20, 50),
+    delta=floats(1e-13, 1.0),
+)
+def test_creation_from_center(beta, threshold, delta):
+    shape = (3, 5)
+    c = torch.tensor(np.random.rand(*shape))
+    box = MinDeltaBoxTensor.from_center_vector(
+        c, delta=delta, beta=beta, threshold=threshold
+    )
+    assert torch.allclose(box.Z, c + delta / 2.0)
+    assert torch.allclose(box.z, c - delta / 2.0)
+
+
+@hypothesis.given(
     sample=sampled_from(
         [
             ((-1, 10), (5, 2, 10), (5, 10), (5, 10)),

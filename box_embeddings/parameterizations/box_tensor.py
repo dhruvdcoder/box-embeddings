@@ -327,6 +327,28 @@ class BoxTensor(object):
 
         return cls.from_zZ(z, Z, *args, **kwargs)  # type:ignore
 
+    @classmethod
+    def from_center_vector(
+        cls, center: Tensor, delta: float = 1e-7, **kwargs: Any
+    ) -> TBoxTensor:
+        """Creates a box given a center vector.
+
+        Args:
+            center: center vector
+            delta: Fixed delta in all directions
+            **kwargs: extra arguments for child class
+
+        Returns:
+            A BoxTensor
+
+        Raises:
+            ValueError: if last dimension is not even
+        """
+        z = center - delta / 2.0
+        Z = center + delta / 2.0
+
+        return cls.from_zZ(z, Z, **kwargs)  # type:ignore
+
     @property
     def box_shape(self) -> Tuple:
         """Shape of z, Z and center.
@@ -591,5 +613,9 @@ BoxFactory.register("box_factory")(BoxFactory)  # register itself
 BoxFactory.register_box_class("boxtensor")(BoxTensor)
 BoxFactory.register_box_class("boxtensor_from_zZ", "from_zZ")(BoxTensor)
 BoxFactory.register_box_class("boxtensor_from_vector", "from_vector")(
+    BoxTensor
+)
+
+BoxFactory.register_box_class("boxtensor_from_center", "from_center_vector")(
     BoxTensor
 )

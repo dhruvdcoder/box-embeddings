@@ -47,6 +47,14 @@ def test_creation_from_vector():
     assert box.Z.shape == (3, 1, 5)
 
 
+def test_creation_from_center():
+    c = torch.tensor([[0.1, 0.2], [0.2, 0.1]])
+    delta = 0.1
+    box = BoxTensor.from_center_vector(c, delta=delta)
+    assert torch.allclose(box.z, c - delta / 2.0)
+    assert torch.allclose(box.Z, c + delta / 2.0)
+
+
 @hypothesis.given(
     sample=sampled_from(
         [

@@ -209,3 +209,7 @@ BoxFactory.register_box_class("mindelta_from_zZ", "from_zZ")(MinDeltaBoxTensor)
 BoxFactory.register_box_class("mindelta_from_vector", "from_vector")(
     MinDeltaBoxTensor
 )
+
+BoxFactory.register_box_class("mindelta_from_center", "from_center_vector")(
+    MinDeltaBoxTensor
+)
