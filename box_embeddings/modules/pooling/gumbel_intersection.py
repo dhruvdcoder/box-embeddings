@@ -22,8 +22,8 @@ def gumbel_intersection_pooler(
     return BoxTensor.from_zZ(z, Z)
 
 
-@BoxPooler.register("hard-intersection")
-class HardIntersectionBoxPooler(BoxPooler):
+@BoxPooler.register("gumbel-intersection")
+class GumbelIntersectionBoxPooler(BoxPooler):
 
     """Pools a box tensor using hard intersection operation"""
 
