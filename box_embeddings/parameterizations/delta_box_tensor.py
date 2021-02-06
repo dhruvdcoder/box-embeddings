@@ -28,6 +28,7 @@ class MinDeltaBoxTensor(BoxTensor):
         data: Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]],
         beta: float = 1.0,
         threshold: float = 20,
+        minimum_delta: float = 0,
     ):
         """
 
@@ -37,14 +38,20 @@ class MinDeltaBoxTensor(BoxTensor):
                 universe box and your inputs ranges, you might want to change this.
                 Higher values of beta will make softplus harder and bring it close to ReLU.
             threshold: parameter for the softplus for delta
+            minimum_delta: Minimum detla
         """
         super().__init__(data)
         self.beta = beta
         self.threshold = threshold
+        self.minimum_delta = minimum_delta
 
     @property
     def kwargs(self) -> Dict:
-        return {"beta": self.beta, "threshold": self.threshold}
+        return {
+            "beta": self.beta,
+            "threshold": self.threshold,
+            "minimum_delta": self.minimum_delta,
+        }
 
     @property
     def args(self) -> Tuple:
@@ -59,8 +66,14 @@ class MinDeltaBoxTensor(BoxTensor):
         """
 
         if self.data is not None:
-            return self.z + torch.nn.functional.softplus(
-                self.data[..., 1, :], beta=self.beta, threshold=self.threshold
+            return (
+                self.z
+                + self.minimum_delta
+                + torch.nn.functional.softplus(
+                    self.data[..., 1, :],
+                    beta=self.beta,
+                    threshold=self.threshold,
+                )
             )
         else:
             return self._Z  # type:ignore
@@ -72,6 +85,7 @@ class MinDeltaBoxTensor(BoxTensor):
         Z: torch.Tensor,
         beta: float = 1.0,
         threshold: float = 20.0,
+        minimum_delta: float = 0,
     ) -> torch.Tensor:
         """Given (z,Z), it returns one set of valid box weights W, such that
         Box(W) = (z,Z).
@@ -88,10 +102,14 @@ class MinDeltaBoxTensor(BoxTensor):
             Z: Top right coordinate of shape (..., hidden_dims)
             beta: TODO
             threshold: TODO
+            minimum_delta: TODO
 
         Returns:
             Tensor: Parameters of the box. In base class implementation, this
                 will have shape (..., 2, hidden_dims).
+
+        Raises:
+            ValueError: When given delta (i.e. Z-z) is less than minimum_delta
         """
         cls.check_if_valid_zZ(z, Z)
 
@@ -101,8 +119,17 @@ class MinDeltaBoxTensor(BoxTensor):
                 " It can produce high error when input Z-z is < 0."
             )
 
+        if ((Z - z) < minimum_delta).any():
+            raise ValueError(f"Z-z should not be less than {minimum_delta}")
+
         return torch.stack(
-            (z, softplus_inverse(Z - z, beta=beta, threshold=threshold)), -2
+            (
+                z,
+                softplus_inverse(
+                    (Z - z) - minimum_delta, beta=beta, threshold=threshold
+                ),
+            ),
+            -2,
         )
 
     #    @classmethod
@@ -154,7 +181,11 @@ class MinDeltaBoxTensor(BoxTensor):
 
     @classmethod
     def from_vector(  # type:ignore
-        cls, vector: torch.Tensor, beta: float = 1.0, threshold: float = 20
+        cls,
+        vector: torch.Tensor,
+        beta: float = 1.0,
+        threshold: float = 20,
+        minimum_delta: float = 0,
     ) -> BoxTensor:
         """Creates a box for a vector. In this base implementation the vector is split
         into two pieces and these are used as z and delta.
@@ -165,6 +196,7 @@ class MinDeltaBoxTensor(BoxTensor):
                 universe box and your inputs ranges, you might want to change this.
                 Higher values of beta will make softplus harder and bring it close to ReLU.
             threshold: parameter for the softplus for delta
+            minimum_delta: delta = minimum_delta + delta
 
 
         Returns:
@@ -201,11 +233,18 @@ class MinDeltaBoxTensor(BoxTensor):
         )
 
         return cls(
-            torch.stack((z, delta), -2), beta=beta, threshold=threshold
+            torch.stack((z, delta), -2),
+            beta=beta,
+            threshold=threshold,
+            minimum_delta=minimum_delta,
         )  # type:ignore
 
 
 BoxFactory.register_box_class("mindelta_from_zZ", "from_zZ")(MinDeltaBoxTensor)
 BoxFactory.register_box_class("mindelta_from_vector", "from_vector")(
+    MinDeltaBoxTensor
+)
+
+BoxFactory.register_box_class("mindelta_from_center", "from_center_vector")(
     MinDeltaBoxTensor
 )

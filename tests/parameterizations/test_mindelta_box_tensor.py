@@ -39,10 +39,27 @@ def test_shape_validation_during_creation():
 
 def test_creation_from_zZ():
     shape = (3, 1, 5)
+    minimum_delta = 1.0
     z = torch.tensor(np.random.rand(*shape))
-    Z = z + torch.tensor(np.random.rand(*shape))
-    box = MinDeltaBoxTensor.from_zZ(z, Z)
+    Z = z + torch.tensor(np.random.rand(*shape)) + minimum_delta
+    box = MinDeltaBoxTensor.from_zZ(z, Z, minimum_delta=minimum_delta)
     assert box.z.shape == (3, 1, 5)
+    assert torch.allclose(box.z, z)
+    assert torch.allclose(box.Z, Z)
+    assert ((box.Z - box.z) > minimum_delta).all()
+
+
+def test_round_trip():
+    shape = (3, 1, 5)
+    minimum_delta = 1.0
+    z = torch.tensor(np.random.rand(*shape))
+    Z = z + torch.tensor(np.random.rand(*shape)) + minimum_delta
+    W = MinDeltaBoxTensor.W(z, Z, minimum_delta=minimum_delta)
+    box = MinDeltaBoxTensor(W, minimum_delta=minimum_delta)
+    assert box.z.shape == (3, 1, 5)
+    assert torch.allclose(box.z, z)
+    assert torch.allclose(box.Z, Z)
+    assert ((box.Z - box.z) > minimum_delta).all()
 
 
 @hypothesis.given(
@@ -54,16 +71,36 @@ def test_creation_from_vector(beta, threshold):
     z = torch.tensor(np.random.rand(*shape))
     w_delta = torch.tensor(np.random.rand(*shape))
     v = torch.cat((z, w_delta), dim=-1)
-    box = MinDeltaBoxTensor.from_vector(v, beta=beta, threshold=threshold)
+    minimum_delta = 1.0
+    box = MinDeltaBoxTensor.from_vector(
+        v, beta=beta, threshold=threshold, minimum_delta=minimum_delta
+    )
     assert box.Z.shape == (3, 1, 5)
     assert torch.allclose(box.z, z)
     assert torch.allclose(
         box.Z,
         z
+        + minimum_delta
         + torch.nn.functional.softplus(
             w_delta, beta=beta, threshold=threshold
         ),
     )
+    assert ((box.Z - box.z) > minimum_delta).all()
+
+
+@hypothesis.given(
+    beta=floats(1.0, 50.0),
+    threshold=integers(20, 50),
+    delta=floats(1e-13, 1.0),
+)
+def test_creation_from_center(beta, threshold, delta):
+    shape = (3, 5)
+    c = torch.tensor(np.random.rand(*shape))
+    box = MinDeltaBoxTensor.from_center_vector(
+        c, delta=delta, beta=beta, threshold=threshold
+    )
+    assert torch.allclose(box.Z, c + delta / 2.0)
+    assert torch.allclose(box.z, c - delta / 2.0)
 
 
 @hypothesis.given(
