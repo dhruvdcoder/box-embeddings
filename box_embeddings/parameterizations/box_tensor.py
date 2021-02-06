@@ -341,8 +341,6 @@ class BoxTensor(object):
         Returns:
             A BoxTensor
 
-        Raises:
-            ValueError: if last dimension is not even
         """
         z = center - delta / 2.0
         Z = center + delta / 2.0
