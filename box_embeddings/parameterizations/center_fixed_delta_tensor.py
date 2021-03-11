@@ -25,7 +25,7 @@ class CenterFixedDeltaBoxTensor(BoxTensor):
     of the input. It uses softplus to keep the delta positive.
 
     """
-    w2z_ratio: int = 2  #: number of parameters required per dim
+    w2z_ratio: int = 1  #: number of parameters required per dim
     
     def __init__(
         self,
